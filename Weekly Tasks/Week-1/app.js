@@ -19,6 +19,6 @@ app.listen(PORT, () => {
 
 app.get('/', (req, res) => {
     res.type('html');
-    res.send('<h1>Welcome to the Express Server</h1>');
+    res.send('<h1>Hello World</h1><h2>Running on Node.js server.</h2>');
     res.end();
 });
