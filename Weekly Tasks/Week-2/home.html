@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+    <title>Node.js File Manager</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        h2 { margin-top: 40px; }
+        section { margin-bottom: 40px; }
+        input, textarea, button { margin: 5px 0; padding: 8px; width: 100%; max-width: 400px; }
+        pre { background: #f4f4f4; padding: 10px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>Node.js File Management Tool</h1>
+
+    <!-- Section 1: List all files -->
+    <section>
+        <h2>1. List All Files</h2>
+        <button onclick="listFiles()">List Files</button>
+        <pre id="fileList"></pre>
+    </section>
+
+    <!-- Section 2: Read file -->
+    <section>
+        <h2>2. Read File</h2>
+        <input type="text" id="readFilename" placeholder="Enter filename to read">
+        <button onclick="readFile()">Read File</button>
+        <pre id="fileContent"></pre>
+    </section>
+
+    <!-- Section 3: Create file -->
+    <section>
+        <h2>3. Create File</h2>
+        <div style="display: flex; flex-direction: column; width: 100%; gap: 4px;">
+            <input type="text" id="createFilename" placeholder="Enter new filename">
+            <div id="editor">
+                
+            </div>
+            <button onclick="createFile()">Create File</button>
+        </div>
+        <pre id="createResponse"></pre>
+    </section>
+
+    <!-- Section 4: Delete file -->
+    <section>
+        <h2>4. Delete File</h2>
+        <input type="text" id="deleteFilename" placeholder="Enter filename to delete">
+        <button onclick="deleteFile()">Delete File</button>
+        <pre id="deleteResponse"></pre>
+    </section>
+
+    <script>
+        const toolbarOptions = [
+            ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+            ['blockquote', 'code-block'],
+            ['link', 'image', 'video', 'formula'],
+            
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'list': 'check' }],
+            [{ 'script': 'sub'}, { 'script': 'super' }],      // superscript/subscript
+            [{ 'indent': '-1'}, { 'indent': '+1' }],          // outdent/indent
+            [{ 'direction': 'rtl' }],                         // text direction
+
+            [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+            [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+            [{ 'font': [] }],
+            [{ 'align': [] }],
+
+            ['clean']                                         // remove formatting button
+            ];
+
+        const quill = new Quill('#editor', {
+            modules: {
+                toolbar: toolbarOptions
+            },
+            theme: 'snow'
+        });
+
+        const API = '/file';
+
+        function listFiles() {
+            fetch('/files')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('fileList').textContent = JSON.stringify(data, null, 2);
+                });
+        }
+
+        function readFile() {
+            const filename = document.getElementById('readFilename').value;
+            if (!filename) return alert('Enter a filename');
+            fetch(`${API}/${filename}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) throw new Error(data.error);
+                    document.getElementById('fileContent').innerHTML = data.content;
+                })
+                .catch(err => {
+                    document.getElementById('fileContent').textContent = err.message;
+                });
+        }
+
+        function createFile() {
+            const filename = document.getElementById('createFilename').value;
+            const content = quill.root.innerHTML;
+            console.log(content);
+            if (!filename) return alert('Enter a filename');
+            fetch(API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filename, content })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('createResponse').textContent = JSON.stringify(data, null, 2);
+            });
+        }
+
+        function deleteFile() {
+            const filename = document.getElementById('deleteFilename').value;
+            if (!filename) return alert('Enter a filename');
+            fetch(`${API}/${filename}`, { method: 'DELETE' })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('deleteResponse').textContent = JSON.stringify(data, null, 2);
+                });
+        }
+    </script>
+</body>
+</html>
