@@ -108,7 +108,7 @@
         function createFile() {
             const filename = document.getElementById('createFilename').value;
             const content = quill.root.innerHTML;
-            console.log(content);
+
             if (!filename) return alert('Enter a filename');
             fetch(API, {
                 method: 'POST',
